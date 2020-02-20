@@ -1,0 +1,37 @@
+
+Sudo Iptables -P OUTPUT DROP
+Sudo Iptables -P INPUT DROP
+
+//protect against ping flooding
+
+iptables -t filter -A INPUT -p icmp --icmp-type echo-request -m limit --limit 5/minute -j ACCEPT
+iptables -t filter -A INPUT -p icmp -j DROP
+iptables -t filter -A OUTPUT -p icmp --icmp-type echo-reply -j ACCEPT
+
+//block outgoing connections allow only security updates = whitelist be.archive.ubuntu.com for security updates
+
+iptables -A OUTPUT -p tcp -d 193.190.67.98 -j ACCEPT
+
+
+//block zone transfers only allow udp op poort 53 
+
+iptables -A INPUT -p tcp --dport 53 -j DROP
+iptables -A INPUT -p udp --dport 53 -j ACCEPT
+
+//HTTP
+
+iptables -A INPUT -p tcp --dport 80 -m state --state NEW,ESTABLISHED -j ACCEPT
+
+//HTTPS
+
+iptables -A INPUT -p tcp --dport 443 -m state --state NEW,ESTABLISHED -j ACCEPT
+
+
+//FTP
+
+iptables -A OUTPUT -p tcp --sport 21 -m state --state ESTABLISHED -j ACCEPT
+iptables -A OUTPUT -p tcp --sport 20 -m state --state ESTABLISHED,RELATED -j ACCEPT
+iptables -A OUTPUT -p tcp --sport 1024: --dport 1024: -m state --state ESTABLISHED -j ACCEPT
+iptables -A INPUT -p tcp --dport 21 -m state --state NEW,ESTABLISHED -j ACCEPT
+iptables -A INPUT -p tcp --dport 20 -m state --state ESTABLISHED -j ACCEPT
+iptables -A INPUT -p tcp --sport 1024: --dport 1024: -m state --state ESTABLISHED,RELATED,NEW -j ACCEPT
